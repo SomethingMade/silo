@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Silo — Admin Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0A0C;
+    --surface:#131316;
+    --surface-2:#1A1A1E;
+    --border:#232327;
+    --border-soft:#1D1D20;
+    --text:#F2F1ED;
+    --text-muted:#87878C;
+    --text-dim:#55555A;
+    --accent:#C89B4A;
+    --accent-dim:#8A6F3A;
+    --accent-glow:rgba(200,155,74,0.18);
+    --danger:#C25B4E;
+    --danger-glow:rgba(194,91,78,0.15);
+    --ok:#6FA37A;
+    --radius:10px;
+    --radius-sm:6px;
+    --font-display:'Michroma', sans-serif;
+    --font-body:'Inter', -apple-system, sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html,body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    height:100%;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  body{
+    background-image:
+      linear-gradient(var(--border-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border-soft) 1px, transparent 1px);
+    background-size:48px 48px;
+    background-attachment:fixed;
+    min-height:100vh;
+  }
+
+  a{color:inherit; text-decoration:none;}
+  button{font-family:inherit; cursor:pointer;}
+  ::selection{background:var(--accent-glow); color:var(--text);}
+
+  ::-webkit-scrollbar{width:10px; height:10px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border); border-radius:10px;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--text-dim);}
+
+  .mono{font-family:var(--font-mono);}
+  .hidden{display:none !important;}
+
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  [tabindex]:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+
+  /* ---------- Login screen ---------- */
+  #loginScreen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+
+  .login-card{
+    width:100%;
+    max-width:380px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:40px 32px;
+    position:relative;
+  }
+
+  .login-mark{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:32px;
+  }
+
+  .login-mark .silo-icon{
+    width:20px; height:26px;
+    flex-shrink:0;
+  }
+
+  .login-mark span{
+    font-family:var(--font-display);
+    font-size:14px;
+    letter-spacing:0.12em;
+  }
+
+  .login-sub{
+    color:var(--text-muted);
+    font-size:13px;
+    line-height:1.6;
+    margin-bottom:28px;
+  }
+
+  .field{
+    margin-bottom:16px;
+  }
+
+  .field label{
+    display:block;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--text-muted);
+    margin-bottom:8px;
+  }
+
+  .field input, .field select{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:11px 12px;
+    color:var(--text);
+    font-size:14px;
+    font-family:var(--font-body);
+    transition:border-color 0.15s ease;
+  }
+
+  .field input:focus, .field select:focus{
+    border-color:var(--accent-dim);
+  }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:11px 18px;
+    border-radius:var(--radius-sm);
+    border:1px solid transparent;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.01em;
+    transition:all 0.15s ease;
+  }
+
+  .btn-primary{
+    background:var(--accent);
+    color:#151108;
+    width:100%;
+  }
+  .btn-primary:hover{background:#D6AA57;}
+  .btn-primary:disabled{opacity:0.5; cursor:not-allowed;}
+
+  .btn-ghost{
+    background:transparent;
+    border-color:var(--border);
+    color:var(--text);
+  }
+  .btn-ghost:hover{border-color:var(--text-dim); background:var(--surface-2);}
+
+  .btn-danger{
+    background:transparent;
+    border-color:var(--danger);
+    color:var(--danger);
+  }
+  .btn-danger:hover{background:var(--danger-glow);}
+
+  .login-error{
+    background:var(--danger-glow);
+    border:1px solid var(--danger);
+    color:#E8A99F;
+    font-size:12.5px;
+    padding:10px 12px;
+    border-radius:var(--radius-sm);
+    margin-bottom:16px;
+    line-height:1.5;
+  }
+
+  .login-foot{
+    margin-top:24px;
+    padding-top:20px;
+    border-top:1px solid var(--border-soft);
+    font-size:11px;
+    color:var(--text-dim);
+    text-align:center;
+    letter-spacing:0.04em;
+  }
+
+  /* ---------- App shell layout ---------- */
+  #appShell{
+    display:grid;
+    grid-template-columns:236px 1fr;
+    min-height:100vh;
+  }
+
+  .sidebar{
+    border-right:1px solid var(--border);
+    background:rgba(19,19,22,0.6);
+    backdrop-filter:blur(8px);
+    padding:22px 16px;
+    display:flex;
+    flex-direction:column;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+
+  .sidebar-mark{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:0 8px;
+    margin-bottom:36px;
+  }
+
+  .sidebar-mark svg{width:17px; height:22px; flex-shrink:0;}
+  .sidebar-mark span{font-family:var(--font-display); font-size:13px; letter-spacing:0.12em;}
+
+  .nav-group{margin-bottom:24px;}
+  .nav-label{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color:var(--text-dim);
+    padding:0 12px;
+    margin-bottom:8px;
+  }
+
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 12px;
+    border-radius:var(--radius-sm);
+    font-size:13.5px;
+    color:var(--text-muted);
+    margin-bottom:2px;
+    transition:all 0.15s ease;
+    border:1px solid transparent;
+    width:100%;
+    background:transparent;
+    text-align:left;
+  }
+
+  .nav-item svg{width:15px; height:15px; opacity:0.8; flex-shrink:0;}
+  .nav-item:hover{color:var(--text); background:var(--surface-2);}
+  .nav-item.active{
+    color:var(--text);
+    background:var(--surface-2);
+    border-color:var(--border);
+  }
+  .nav-item.active::before{
+    content:'';
+  }
+
+  .sidebar-foot{
+    margin-top:auto;
+    padding-top:16px;
+    border-top:1px solid var(--border-soft);
+  }
+
+  .operator-chip{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 10px;
+    border-radius:var(--radius-sm);
+  }
+
+  .operator-avatar{
+    width:28px; height:28px;
+    border-radius:50%;
+    background:var(--accent-glow);
+    color:var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700;
+    flex-shrink:0;
+  }
+
+  .operator-meta{overflow:hidden;}
+  .operator-email{font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .operator-signout{
+    font-size:11px; color:var(--text-dim); background:none; border:none; padding:0;
+    text-decoration:underline; text-underline-offset:2px;
+  }
+  .operator-signout:hover{color:var(--text-muted);}
+
+  /* ---------- Main content ---------- */
+  .main{padding:32px 40px 80px; max-width:1280px;}
+
+  .page{display:none;}
+  .page.active{display:block; animation:fadeIn 0.25s ease;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  .page-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    margin-bottom:28px;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+
+  .page-title{font-family:var(--font-display); font-size:18px; letter-spacing:0.03em; margin-bottom:6px;}
+  .page-sub{font-size:13px; color:var(--text-muted); max-width:520px; line-height:1.5;}
+
+  /* ---------- Stat cards ---------- */
+  .stat-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:1px;
+    background:var(--border);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+    margin-bottom:32px;
+  }
+
+  .stat-card{background:var(--surface); padding:20px 22px;}
+  .stat-label{font-size:11px; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-muted); margin-bottom:10px;}
+  .stat-value{font-family:var(--font-mono); font-size:26px; font-weight:600; letter-spacing:-0.01em;}
+  .stat-value.accent{color:var(--accent);}
+  .stat-value.danger{color:var(--danger);}
+  .stat-delta{font-size:11.5px; color:var(--text-dim); margin-top:6px; font-family:var(--font-mono);}
+
+  @media (max-width:900px){
+    .stat-grid{grid-template-columns:repeat(2,1fr);}
+  }
+
+  /* ---------- Section header w/ actions ---------- */
+  .section-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+
+  .search-wrap{
+    position:relative;
+    flex:1;
+    min-width:200px;
+    max-width:320px;
+  }
+  .search-wrap svg{
+    position:absolute; left:11px; top:50%; transform:translateY(-50%);
+    width:14px; height:14px; color:var(--text-dim); pointer-events:none;
+  }
+  .search-wrap input{
+    width:100%;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:9px 12px 9px 32px;
+    color:var(--text);
+    font-size:13px;
+  }
+  .search-wrap input:focus{border-color:var(--accent-dim);}
+
+  .filter-chips{display:flex; gap:6px;}
+  .chip{
+    padding:7px 13px;
+    border-radius:20px;
+    border:1px solid var(--border);
+    font-size:12px;
+    color:var(--text-muted);
+    background:transparent;
+    transition:all 0.15s ease;
+  }
+  .chip:hover{border-color:var(--text-dim);}
+  .chip.active{background:var(--accent-glow); border-color:var(--accent-dim); color:var(--accent);}
+
+  .bar-actions{display:flex; gap:10px; align-items:center;}
+
+  /* ---------- Silo visual (signature element) ---------- */
+  .silo-viz{
+    position:relative;
+    width:34px;
+    height:52px;
+    flex-shrink:0;
+  }
+  .silo-viz svg{position:absolute; inset:0; width:100%; height:100%;}
+  .silo-fill-mask{transition:height 0.5s cubic-bezier(0.16,1,0.3,1);}
+
+  /* ---------- Companies grid (Overview) ---------- */
+  .company-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
+    gap:1px;
+    background:var(--border);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+
+  .company-tile{
+    background:var(--surface);
+    padding:18px;
+    display:flex;
+    gap:14px;
+    cursor:pointer;
+    transition:background 0.15s ease;
+  }
+  .company-tile:hover{background:var(--surface-2);}
+
+  .company-tile-meta{flex:1; min-width:0;}
+  .company-tile-name{font-size:14px; font-weight:600; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .company-tile-plan{font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px;}
+  .company-tile-usage{font-family:var(--font-mono); font-size:11.5px; color:var(--text-muted);}
+  .company-tile-usage b{color:var(--text); font-weight:600;}
+
+  .status-dot{width:6px; height:6px; border-radius:50%; display:inline-block; margin-right:6px;}
+  .status-dot.active{background:var(--ok);}
+  .status-dot.suspended{background:var(--danger);}
+  .status-dot.pending{background:var(--text-dim);}
+
+  /* ---------- Companies table ---------- */
+  .table-wrap{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+
+  table{width:100%; border-collapse:collapse;}
+  thead th{
+    text-align:left;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.07em;
+    color:var(--text-dim);
+    padding:12px 16px;
+    background:var(--surface-2);
+    border-bottom:1px solid var(--border);
+    font-weight:600;
+  }
+  tbody tr{
+    border-bottom:1px solid var(--border-soft);
+    background:var(--surface);
+    cursor:pointer;
+    transition:background 0.15s ease;
+  }
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:var(--surface-2);}
+  tbody td{padding:13px 16px; font-size:13px; vertical-align:middle;}
+
+  .td-company{display:flex; align-items:center; gap:12px;}
+  .td-company-name{font-weight:600; font-size:13.5px;}
+  .td-company-email{font-size:11.5px; color:var(--text-dim); margin-top:2px;}
+
+  .usage-bar-track{
+    width:110px; height:5px; border-radius:4px;
+    background:var(--border); overflow:hidden;
+  }
+  .usage-bar-fill{height:100%; background:var(--accent); border-radius:4px; transition:width 0.4s ease;}
+  .usage-bar-fill.over{background:var(--danger);}
+
+  .status-pill{
+    display:inline-flex; align-items:center;
+    font-size:11px; padding:4px 10px; border-radius:20px;
+    text-transform:capitalize; font-weight:500;
+  }
+  .status-pill.active{background:rgba(111,163,122,0.13); color:var(--ok);}
+  .status-pill.suspended{background:var(--danger-glow); color:#E8A99F;}
+  .status-pill.pending{background:var(--surface-2); color:var(--text-muted); border:1px solid var(--border);}
+
+  .empty-state{
+    text-align:center;
+    padding:70px 20px;
+    color:var(--text-muted);
+  }
+  .empty-state svg{width:38px; height:38px; margin-bottom:16px; color:var(--text-dim);}
+  .empty-state h3{font-size:14px; color:var(--text); margin-bottom:6px; font-weight:600;}
+  .empty-state p{font-size:12.5px; max-width:320px; margin:0 auto 20px; line-height:1.5;}
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(6,6,7,0.7);
+    backdrop-filter:blur(3px);
+    display:flex; align-items:center; justify-content:center;
+    z-index:100; padding:20px;
+    animation:overlayIn 0.15s ease;
+  }
+  @keyframes overlayIn{from{opacity:0;} to{opacity:1;}}
+
+  .modal{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    width:100%; max-width:440px;
+    max-height:90vh;
+    overflow-y:auto;
+    animation:modalIn 0.2s cubic-bezier(0.16,1,0.3,1);
+  }
+  @keyframes modalIn{from{opacity:0; transform:translateY(8px) scale(0.98);} to{opacity:1; transform:translateY(0) scale(1);}}
+
+  .modal-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 22px; border-bottom:1px solid var(--border-soft);
+  }
+  .modal-title{font-size:15px; font-weight:600;}
+  .modal-close{background:none; border:none; color:var(--text-muted); font-size:18px; line-height:1; padding:4px;}
+  .modal-close:hover{color:var(--text);}
+  .modal-body{padding:22px;}
+  .modal-foot{padding:16px 22px; border-top:1px solid var(--border-soft); display:flex; gap:10px; justify-content:flex-end;}
+
+  .field-hint{font-size:11px; color:var(--text-dim); margin-top:6px; line-height:1.5;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+
+  .plan-options{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+  .plan-opt{
+    border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:10px 8px; text-align:center; font-size:12px; background:var(--bg);
+    transition:all 0.15s ease;
+  }
+  .plan-opt:hover{border-color:var(--text-dim);}
+  .plan-opt.selected{border-color:var(--accent); background:var(--accent-glow); color:var(--accent);}
+  .plan-opt .plan-opt-quota{font-family:var(--font-mono); font-size:11px; color:var(--text-dim); margin-top:3px;}
+  .plan-opt.selected .plan-opt-quota{color:var(--accent);}
+
+  .apikey-box{
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:14px 14px;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    word-break:break-all;
+    color:var(--accent);
+    margin:14px 0;
+    position:relative;
+  }
+
+  .apikey-warning{
+    background:var(--danger-glow);
+    border:1px solid var(--danger);
+    color:#E8A99F;
+    font-size:11.5px;
+    padding:10px 12px;
+    border-radius:var(--radius-sm);
+    line-height:1.5;
+    margin-bottom:14px;
+  }
+
+  .copy-btn{
+    font-size:11px; color:var(--text-muted); background:var(--surface-2);
+    border:1px solid var(--border); padding:6px 10px; border-radius:var(--radius-sm);
+    margin-top:10px;
+  }
+  .copy-btn:hover{color:var(--text); border-color:var(--text-dim);}
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(0);
+    background:var(--surface-2); border:1px solid var(--border);
+    padding:11px 18px; border-radius:var(--radius-sm);
+    font-size:12.5px; z-index:200;
+    display:flex; align-items:center; gap:8px;
+    animation:toastIn 0.2s cubic-bezier(0.16,1,0.3,1);
+    box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  }
+  @keyframes toastIn{from{opacity:0; transform:translateX(-50%) translateY(8px);} to{opacity:1; transform:translateX(-50%) translateY(0);}}
+  .toast-dot{width:6px; height:6px; border-radius:50%; background:var(--ok);}
+  .toast.err .toast-dot{background:var(--danger);}
+
+  /* ---------- Slide-over (company detail) ---------- */
+  .slideover-overlay{
+    position:fixed; inset:0; background:rgba(6,6,7,0.6);
+    z-index:90; animation:overlayIn 0.15s ease;
+  }
+  .slideover{
+    position:fixed; top:0; right:0; bottom:0;
+    width:100%; max-width:460px;
+    background:var(--surface);
+    border-left:1px solid var(--border);
+    z-index:95;
+    overflow-y:auto;
+    animation:slideIn 0.25s cubic-bezier(0.16,1,0.3,1);
+  }
+  @keyframes slideIn{from{transform:translateX(100%);} to{transform:translateX(0);}}
+
+  .slideover-head{
+    padding:24px 26px 20px;
+    border-bottom:1px solid var(--border-soft);
+    display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+  }
+  .slideover-body{padding:24px 26px 60px;}
+
+  .detail-section{margin-bottom:28px;}
+  .detail-section-title{
+    font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--text-dim); margin-bottom:14px;
+  }
+
+  .detail-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 0; border-bottom:1px solid var(--border-soft);
+    font-size:13px;
+  }
+  .detail-row:last-child{border-bottom:none;}
+  .detail-row-label{color:var(--text-muted);}
+  .detail-row-value{font-family:var(--font-mono); font-size:12.5px;}
+
+  .silo-hero{
+    display:flex; align-items:center; gap:20px;
+    padding:20px; background:var(--bg); border:1px solid var(--border);
+    border-radius:var(--radius); margin-bottom:20px;
+  }
+  .silo-hero .silo-viz{width:52px; height:80px;}
+  .silo-hero-stats{flex:1;}
+  .silo-hero-pct{font-family:var(--font-mono); font-size:24px; font-weight:600;}
+  .silo-hero-bytes{font-size:12px; color:var(--text-muted); margin-top:2px;}
+
+  .quota-slider-row{margin-top:14px;}
+  input[type=range]{
+    width:100%; height:4px; border-radius:4px;
+    background:var(--border); appearance:none; -webkit-appearance:none;
+    margin:10px 0;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:15px; height:15px; border-radius:50%;
+    background:var(--accent); cursor:pointer; border:2px solid var(--bg);
+  }
+
+  .danger-zone{
+    border:1px solid var(--danger); border-radius:var(--radius);
+    padding:16px; background:var(--danger-glow);
+  }
+  .danger-zone p{font-size:12px; color:#E8A99F; line-height:1.5; margin-bottom:12px;}
+
+  @media (max-width:760px){
+    #appShell{grid-template-columns:1fr;}
+    .sidebar{
+      position:fixed; bottom:0; left:0; right:0; top:auto; height:auto;
+      flex-direction:row; align-items:center; padding:10px 14px;
+      z-index:80; border-right:none; border-top:1px solid var(--border);
+    }
+    .sidebar-mark, .sidebar-foot, .nav-label{display:none;}
+    .nav-group{display:flex; gap:4px; margin-bottom:0;}
+    .nav-item{flex-direction:column; gap:3px; font-size:10px; padding:6px 14px;}
+    .main{padding:20px 16px 90px;}
+    .field-row{grid-template-columns:1fr;}
+    .stat-grid{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-mark">
+      <svg class="silo-icon" viewBox="0 0 20 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 6C2 3.79 5.58 2 10 2C14.42 2 18 3.79 18 6V18C18 21.31 14.42 24 10 24C5.58 24 2 21.31 2 18V6Z" stroke="#C89B4A" stroke-width="1.4"/>
+        <ellipse cx="10" cy="6" rx="8" ry="4" stroke="#C89B4A" stroke-width="1.4"/>
+        <path d="M2 12H18" stroke="#C89B4A" stroke-width="1" opacity="0.4"/>
+      </svg>
+      <span>SILO</span>
+    </div>
+    <p class="login-sub">Admin console. Sign in with your operator credentials to manage companies, quotas, and storage.</p>
+    <div id="loginError" class="login-error hidden"></div>
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary" id="loginSubmitBtn">Sign in</button>
+    </form>
+    <div class="login-foot">VYNIX INTERNAL &middot; OPERATOR ACCESS ONLY</div>
+  </div>
+</div>
+
+<!-- ============ APP SHELL (populated after auth) ============ -->
+<div id="appShell" class="hidden">
+
+  <nav class="sidebar">
+    <div class="sidebar-mark">
+      <svg viewBox="0 0 20 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 6C2 3.79 5.58 2 10 2C14.42 2 18 3.79 18 6V18C18 21.31 14.42 24 10 24C5.58 24 2 21.31 2 18V6Z" stroke="#C89B4A" stroke-width="1.4"/>
+        <ellipse cx="10" cy="6" rx="8" ry="4" stroke="#C89B4A" stroke-width="1.4"/>
+      </svg>
+      <span>SILO</span>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Console</div>
+      <button class="nav-item active" data-page="overview">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M2 9h3v5H2V9zm4.5-4h3v9h-3V5zM11 2h3v12h-3V2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        Overview
+      </button>
+      <button class="nav-item" data-page="companies">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+        Companies
+      </button>
+    </div>
+
+    <div class="sidebar-foot">
+      <div class="operator-chip">
+        <div class="operator-avatar" id="operatorInitial">A</div>
+        <div class="operator-meta">
+          <div class="operator-email" id="operatorEmail">—</div>
+          <button class="operator-signout" id="signOutBtn">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- ===== OVERVIEW PAGE ===== -->
+    <section class="page active" id="page-overview">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Overview</div>
+          <div class="page-sub">Fleet-wide storage allocation across every onboarded company.</div>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Companies</div>
+          <div class="stat-value" id="statCompanies">—</div>
+          <div class="stat-delta" id="statCompaniesDelta">&nbsp;</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Storage allocated</div>
+          <div class="stat-value" id="statAllocated">—</div>
+          <div class="stat-delta">total quota across all plans</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Storage used</div>
+          <div class="stat-value accent" id="statUsed">—</div>
+          <div class="stat-delta" id="statUsedPct">&nbsp;</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Near quota</div>
+          <div class="stat-value danger" id="statNearQuota">—</div>
+          <div class="stat-delta">companies over 85% usage</div>
+        </div>
+      </div>
+
+      <div class="section-bar">
+        <div class="page-title" style="font-size:13px; letter-spacing:0.06em; color:var(--text-muted); text-transform:uppercase;">By company</div>
+        <div class="bar-actions">
+          <button class="btn btn-primary" id="addCompanyBtnOverview" style="width:auto; padding:9px 16px;">+ Onboard company</button>
+        </div>
+      </div>
+
+      <div id="companyGrid" class="company-grid"></div>
+      <div id="overviewEmpty" class="empty-state hidden">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 8C4 5.79 7.58 4 12 4C16.42 4 20 5.79 20 8V16C20 18.21 16.42 20 12 20C7.58 20 4 18.21 4 16V8Z" stroke="currentColor" stroke-width="1.3"/></svg>
+        <h3>No companies yet</h3>
+        <p>Onboard your first client to start allocating storage and tracking usage.</p>
+        <button class="btn btn-primary" style="width:auto; padding:10px 20px;" onclick="openAddCompanyModal()">+ Onboard company</button>
+      </div>
+    </section>
+
+    <!-- ===== COMPANIES PAGE ===== -->
+    <section class="page" id="page-companies">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Companies</div>
+          <div class="page-sub">Every client with an allocated Silo workspace. Click a row to manage quota, status, and API keys.</div>
+        </div>
+      </div>
+
+      <div class="section-bar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <input type="text" id="companySearch" placeholder="Search companies…">
+        </div>
+        <div class="filter-chips" id="statusFilterChips">
+          <button class="chip active" data-status="all">All</button>
+          <button class="chip" data-status="active">Active</button>
+          <button class="chip" data-status="suspended">Suspended</button>
+          <button class="chip" data-status="pending">Pending</button>
+        </div>
+        <div class="bar-actions">
+          <button class="btn btn-primary" id="addCompanyBtnTable" style="width:auto; padding:9px 16px;">+ Onboard company</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Plan</th>
+              <th>Usage</th>
+              <th>Status</th>
+              <th>Onboarded</th>
+            </tr>
+          </thead>
+          <tbody id="companyTableBody"></tbody>
+        </table>
+      </div>
+      <div id="companiesEmpty" class="empty-state hidden">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.3"/></svg>
+        <h3>No matches</h3>
+        <p>No companies match this search or filter.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ TEMPLATES: rendered via JS into #modalRoot ============ -->
+<div id="modalRoot"></div>
+<div id="slideoverRoot"></div>
+<div id="toastRoot"></div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+
+<script>
+/* ============================================================
+   SILO ADMIN CONSOLE
+   ============================================================ */
+
+// ---------- Firebase config ----------
+const firebaseConfig = {
+  apiKey: "AIzaSyBQSPwpVbGrdCuOoyitAeWQHIeipj2MgIY",
+  authDomain: "newstart-64c43.firebaseapp.com",
+  databaseURL: "https://newstart-64c43-default-rtdb.firebaseio.com",
+  projectId: "newstart-64c43",
+  storageBucket: "newstart-64c43.firebasestorage.app",
+  messagingSenderId: "941619830061",
+  appId: "1:941619830061:web:de9e0f791eb8f6eacf87a4",
+  measurementId: "G-7064P2RFHN"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ---------- Plans ----------
+const GB = 1024 ** 3;
+const TB = 1024 ** 4;
+const PLANS = {
+  starter: { label: 'Starter',  quotaBytes: 100 * GB },
+  growth:  { label: 'Growth',   quotaBytes: 1 * TB },
+  scale:   { label: 'Scale',    quotaBytes: 5 * TB },
+  custom:  { label: 'Custom',   quotaBytes: null }
+};
+
+// ---------- State ----------
+let companiesCache = [];       // live Firestore data
+let unsubscribeCompanies = null;
+let currentPage = 'overview';
+let activeStatusFilter = 'all';
+let searchQuery = '';
+let selectedPlanKey = 'starter';
+let openCompanyId = null;      // company shown in slide-over
+let quotaDraftBytes = null;    // pending quota edit value
+
+// ---------- Utilities ----------
+function formatBytes(bytes) {
+  if (bytes === 0 || bytes == null) return '0 GB';
+  if (bytes >= TB) return (bytes / TB).toFixed(2).replace(/\.00$/, '') + ' TB';
+  if (bytes >= GB) return (bytes / GB).toFixed(1).replace(/\.0$/, '') + ' GB';
+  return (bytes / (1024 ** 2)).toFixed(0) + ' MB';
+}
+
+function formatDate(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('en-ZA', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function usagePct(company) {
+  if (!company.quotaBytes) return 0;
+  return Math.min(1, (company.usedBytes || 0) / company.quotaBytes);
+}
+
+function initials(name) {
+  return (name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('');
+}
+
+async function sha256Hex(text) {
+  const enc = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function randomKeySuffix(len = 32) {
+  const bytes = crypto.getRandomValues(new Uint8Array(len));
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, len);
+}
+
+function toast(message, isError = false) {
+  const root = document.getElementById('toastRoot');
+  const el = document.createElement('div');
+  el.className = 'toast' + (isError ? ' err' : '');
+  el.innerHTML = `<span class="toast-dot"></span><span>${message}</span>`;
+  root.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// ---------- Silo SVG (signature visual) ----------
+let siloIdCounter = 0;
+function siloSVG(pct) {
+  const id = 'siloclip-' + (siloIdCounter++);
+  const clamped = Math.max(0, Math.min(1, pct || 0));
+  const color = clamped >= 0.9 ? 'var(--danger)' : 'var(--accent)';
+  const fillTop = 48 - clamped * 44;
+  const shape = "M4,14 Q4,4 17,4 Q30,4 30,14 L30,34 L22,48 L12,48 L4,34 Z";
+  return `<svg viewBox="0 0 34 52" xmlns="http://www.w3.org/2000/svg">
+    <defs><clipPath id="${id}"><path d="${shape}"/></clipPath></defs>
+    <rect x="0" y="0" width="34" height="52" fill="var(--surface-2)" clip-path="url(#${id})"/>
+    <rect class="silo-fill-mask" x="0" y="${fillTop}" width="34" height="${clamped * 44 + 12}" fill="${color}" clip-path="url(#${id})"/>
+    <line x1="5" y1="20" x2="29" y2="20" stroke="var(--bg)" stroke-width="0.7" opacity="0.35" clip-path="url(#${id})"/>
+    <line x1="5" y1="30" x2="29" y2="30" stroke="var(--bg)" stroke-width="0.7" opacity="0.35" clip-path="url(#${id})"/>
+    <path d="${shape}" stroke="var(--border)" stroke-width="1.3" fill="none"/>
+  </svg>`;
+}
+
+// ---------- Auth ----------
+const loginScreen = document.getElementById('loginScreen');
+const appShell = document.getElementById('appShell');
+const loginForm = document.getElementById('loginForm');
+const loginError = document.getElementById('loginError');
+const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  loginError.classList.add('hidden');
+  loginSubmitBtn.disabled = true;
+  loginSubmitBtn.textContent = 'Signing in…';
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    // onAuthStateChanged handles the rest
+  } catch (err) {
+    loginError.textContent = friendlyAuthError(err);
+    loginError.classList.remove('hidden');
+    loginSubmitBtn.disabled = false;
+    loginSubmitBtn.textContent = 'Sign in';
+  }
+});
+
+function friendlyAuthError(err) {
+  const code = err.code || '';
+  if (code.includes('user-not-found') || code.includes('wrong-password') || code.includes('invalid-credential')) {
+    return 'Incorrect email or password.';
+  }
+  if (code.includes('too-many-requests')) return 'Too many attempts. Try again shortly.';
+  return 'Sign-in failed. Please try again.';
+}
+
+document.getElementById('signOutBtn').addEventListener('click', () => auth.signOut());
+
+auth.onAuthStateChanged(async (user) => {
+  if (!user) {
+    showLogin();
+    return;
+  }
+  try {
+    const adminDoc = await db.collection('admins').doc(user.uid).get();
+    if (!adminDoc.exists) {
+      loginError.textContent = 'This account is not authorized for operator access.';
+      loginError.classList.remove('hidden');
+      loginSubmitBtn.disabled = false;
+      loginSubmitBtn.textContent = 'Sign in';
+      await auth.signOut();
+      return;
+    }
+    document.getElementById('operatorEmail').textContent = user.email;
+    document.getElementById('operatorInitial').textContent = initials(user.email.split('@')[0]);
+    showApp();
+    startCompaniesListener();
+  } catch (err) {
+    console.error(err);
+    loginError.textContent = 'Could not verify operator access. Check your connection.';
+    loginError.classList.remove('hidden');
+    await auth.signOut();
+  }
+});
+
+function showLogin() {
+  loginScreen.classList.remove('hidden');
+  appShell.classList.add('hidden');
+  loginSubmitBtn.disabled = false;
+  loginSubmitBtn.textContent = 'Sign in';
+  if (unsubscribeCompanies) { unsubscribeCompanies(); unsubscribeCompanies = null; }
+  companiesCache = [];
+}
+
+function showApp() {
+  loginScreen.classList.add('hidden');
+  appShell.classList.remove('hidden');
+}
+
+// ---------- Navigation ----------
+document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
+  btn.addEventListener('click', () => goToPage(btn.dataset.page));
+});
+
+function goToPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item[data-page]').forEach(b => b.classList.toggle('active', b.dataset.page === page));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + page));
+}
+
+// ---------- Firestore: companies listener ----------
+function startCompaniesListener() {
+  if (unsubscribeCompanies) unsubscribeCompanies();
+  unsubscribeCompanies = db.collection('companies')
+    .orderBy('createdAt', 'desc')
+    .onSnapshot(
+      (snap) => {
+        companiesCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderAll();
+      },
+      (err) => {
+        console.error('companies listener error', err);
+        toast('Could not load companies. Check your connection.', true);
+      }
+    );
+}
+
+function renderAll() {
+  renderStats();
+  renderOverviewGrid();
+  renderCompanyTable();
+  if (openCompanyId) renderSlideover();
+}
+
+// ---------- Stats ----------
+function renderStats() {
+  const total = companiesCache.length;
+  const allocated = companiesCache.reduce((s, c) => s + (c.quotaBytes || 0), 0);
+  const used = companiesCache.reduce((s, c) => s + (c.usedBytes || 0), 0);
+  const nearQuota = companiesCache.filter(c => usagePct(c) >= 0.85).length;
+  const activeCount = companiesCache.filter(c => c.status === 'active').length;
+
+  document.getElementById('statCompanies').textContent = total;
+  document.getElementById('statCompaniesDelta').textContent = `${activeCount} active`;
+  document.getElementById('statAllocated').textContent = formatBytes(allocated);
+  document.getElementById('statUsed').textContent = formatBytes(used);
+  document.getElementById('statUsedPct').textContent = allocated ? `${((used / allocated) * 100).toFixed(1)}% of allocated` : '—';
+  document.getElementById('statNearQuota').textContent = nearQuota;
+}
+
+// ---------- Overview grid ----------
+function renderOverviewGrid() {
+  const grid = document.getElementById('companyGrid');
+  const empty = document.getElementById('overviewEmpty');
+  if (companiesCache.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  grid.innerHTML = companiesCache.map(c => {
+    const pct = usagePct(c);
+    return `
+      <div class="company-tile" onclick="openCompanyDetail('${c.id}')">
+        <div class="silo-viz">${siloSVG(pct)}</div>
+        <div class="company-tile-meta">
+          <div class="company-tile-name">${escapeHtml(c.name)}</div>
+          <div class="company-tile-plan"><span class="status-dot ${c.status}"></span>${PLANS[c.plan]?.label || c.plan}</div>
+          <div class="company-tile-usage"><b>${formatBytes(c.usedBytes)}</b> / ${formatBytes(c.quotaBytes)}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ---------- Companies table ----------
+function getFilteredCompanies() {
+  return companiesCache.filter(c => {
+    if (activeStatusFilter !== 'all' && c.status !== activeStatusFilter) return false;
+    if (searchQuery && !(`${c.name} ${c.contactEmail}`.toLowerCase().includes(searchQuery.toLowerCase()))) return false;
+    return true;
+  });
+}
+
+function renderCompanyTable() {
+  const tbody = document.getElementById('companyTableBody');
+  const empty = document.getElementById('companiesEmpty');
+  const rows = getFilteredCompanies();
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  tbody.innerHTML = rows.map(c => {
+    const pct = usagePct(c);
+    const barClass = pct >= 0.9 ? 'over' : '';
+    return `
+      <tr onclick="openCompanyDetail('${c.id}')">
+        <td>
+          <div class="td-company">
+            <div class="silo-viz" style="width:22px;height:34px;">${siloSVG(pct)}</div>
+            <div>
+              <div class="td-company-name">${escapeHtml(c.name)}</div>
+              <div class="td-company-email">${escapeHtml(c.contactEmail || '')}</div>
+            </div>
+          </div>
+        </td>
+        <td>${PLANS[c.plan]?.label || c.plan}</td>
+        <td>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="usage-bar-track"><div class="usage-bar-fill ${barClass}" style="width:${(pct * 100).toFixed(1)}%"></div></div>
+            <span class="mono" style="font-size:11.5px; color:var(--text-muted);">${(pct * 100).toFixed(0)}%</span>
+          </div>
+        </td>
+        <td><span class="status-pill ${c.status}">${c.status}</span></td>
+        <td class="mono" style="color:var(--text-muted); font-size:12px;">${formatDate(c.createdAt)}</td>
+      </tr>`;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
+}
+
+// ---------- Search & filter wiring ----------
+document.getElementById('companySearch').addEventListener('input', (e) => {
+  searchQuery = e.target.value;
+  renderCompanyTable();
+});
+
+document.querySelectorAll('#statusFilterChips .chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('#statusFilterChips .chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeStatusFilter = chip.dataset.status;
+    renderCompanyTable();
+  });
+});
+
+// ---------- Modal: onboard company ----------
+document.getElementById('addCompanyBtnOverview').addEventListener('click', openAddCompanyModal);
+document.getElementById('addCompanyBtnTable').addEventListener('click', openAddCompanyModal);
+
+function closeModal() {
+  document.getElementById('modalRoot').innerHTML = '';
+}
+
+function openAddCompanyModal() {
+  selectedPlanKey = 'starter';
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <div class="modal-head">
+          <div class="modal-title">Onboard company</div>
+          <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="field">
+            <label for="newCompanyName">Company name</label>
+            <input type="text" id="newCompanyName" placeholder="e.g. Kagiso Logistics">
+          </div>
+          <div class="field">
+            <label for="newCompanyEmail">Contact email</label>
+            <input type="email" id="newCompanyEmail" placeholder="ops@company.co.za">
+          </div>
+          <div class="field">
+            <label>Plan</label>
+            <div class="plan-options" id="planOptions">
+              ${Object.entries(PLANS).map(([key, p]) => `
+                <button type="button" class="plan-opt ${key === selectedPlanKey ? 'selected' : ''}" data-plan="${key}" onclick="selectPlan('${key}')">
+                  ${p.label}
+                  <div class="plan-opt-quota">${p.quotaBytes ? formatBytes(p.quotaBytes) : 'custom'}</div>
+                </button>`).join('')}
+            </div>
+          </div>
+          <div class="field hidden" id="customQuotaField">
+            <label for="customQuotaGb">Custom quota (GB)</label>
+            <input type="number" id="customQuotaGb" min="1" placeholder="e.g. 250">
+          </div>
+          <div class="field-hint">An API key is generated automatically and shown once after onboarding.</div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" style="width:auto; padding:11px 20px;" id="createCompanyBtn" onclick="submitNewCompany()">Onboard</button>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(() => document.getElementById('newCompanyName')?.focus(), 50);
+}
+
+function selectPlan(key) {
+  selectedPlanKey = key;
+  document.querySelectorAll('#planOptions .plan-opt').forEach(el => el.classList.toggle('selected', el.dataset.plan === key));
+  document.getElementById('customQuotaField').classList.toggle('hidden', key !== 'custom');
+}
+
+async function submitNewCompany() {
+  const name = document.getElementById('newCompanyName').value.trim();
+  const email = document.getElementById('newCompanyEmail').value.trim();
+  if (!name) { toast('Company name is required.', true); return; }
+
+  let quotaBytes = PLANS[selectedPlanKey].quotaBytes;
+  if (selectedPlanKey === 'custom') {
+    const gb = parseFloat(document.getElementById('customQuotaGb').value);
+    if (!gb || gb <= 0) { toast('Enter a valid custom quota.', true); return; }
+    quotaBytes = gb * GB;
+  }
+
+  const btn = document.getElementById('createCompanyBtn');
+  btn.disabled = true; btn.textContent = 'Onboarding…';
+
+  try {
+    const key = 'sk_live_' + randomKeySuffix(32);
+    const keyHash = await sha256Hex(key);
+    const docRef = db.collection('companies').doc();
+    await docRef.set({
+      name,
+      contactEmail: email || null,
+      plan: selectedPlanKey,
+      quotaBytes,
+      usedBytes: 0,
+      status: 'active',
+      apiKeyHash: keyHash,
+      apiKeyPrefix: key.slice(0, 16) + '…',
+      apiKeyCreatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast(`${name} onboarded.`);
+    showApiKeyModal(key, name);
+  } catch (err) {
+    console.error(err);
+    toast('Could not onboard company. Try again.', true);
+    btn.disabled = false; btn.textContent = 'Onboard';
+  }
+}
+
+function showApiKeyModal(key, companyName) {
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal">
+        <div class="modal-head">
+          <div class="modal-title">API key — ${escapeHtml(companyName)}</div>
+        </div>
+        <div class="modal-body">
+          <div class="apikey-warning">This key is shown once. Copy it now — Silo only stores a hash of it, so it can't be retrieved later. If it's lost, regenerate a new one from the company panel.</div>
+          <div class="apikey-box" id="apiKeyText">${key}</div>
+          <button class="copy-btn" onclick="copyApiKey('${key}')">Copy to clipboard</button>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-primary" style="width:auto; padding:10px 20px;" onclick="closeModal()">Done</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function copyApiKey(key) {
+  navigator.clipboard.writeText(key)
+    .then(() => toast('Key copied to clipboard.'))
+    .catch(() => toast('Could not copy — select and copy manually.', true));
+}
+
+// ---------- Slide-over: company detail ----------
+function openCompanyDetail(id) {
+  openCompanyId = id;
+  const c = companiesCache.find(x => x.id === id);
+  quotaDraftBytes = c ? c.quotaBytes : null;
+  renderSlideover();
+}
+
+function closeSlideover() {
+  openCompanyId = null;
+  quotaDraftBytes = null;
+  document.getElementById('slideoverRoot').innerHTML = '';
+}
+
+function renderSlideover() {
+  const c = companiesCache.find(x => x.id === openCompanyId);
+  const root = document.getElementById('slideoverRoot');
+  if (!c) { root.innerHTML = ''; return; }
+
+  const pct = usagePct(c);
+  const draftQuota = quotaDraftBytes ?? c.quotaBytes;
+  const draftPct = c.usedBytes ? Math.min(1, c.usedBytes / draftQuota) : 0;
+  const sliderMaxGb = Math.max(2000, Math.ceil((c.quotaBytes / GB) * 3));
+
+  root.innerHTML = `
+    <div class="slideover-overlay" onclick="closeSlideover()"></div>
+    <div class="slideover">
+      <div class="slideover-head">
+        <div>
+          <div class="page-title" style="font-size:16px;">${escapeHtml(c.name)}</div>
+          <div class="page-sub" style="margin-top:4px;">${escapeHtml(c.contactEmail || 'No contact email on file')}</div>
+        </div>
+        <button class="modal-close" onclick="closeSlideover()">&times;</button>
+      </div>
+      <div class="slideover-body">
+
+        <div class="silo-hero">
+          <div class="silo-viz">${siloSVG(pct)}</div>
+          <div class="silo-hero-stats">
+            <div class="silo-hero-pct">${(pct * 100).toFixed(0)}%</div>
+            <div class="silo-hero-bytes">${formatBytes(c.usedBytes)} used of ${formatBytes(c.quotaBytes)}</div>
+          </div>
+          <span class="status-pill ${c.status}">${c.status}</span>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">Details</div>
+          <div class="detail-row"><span class="detail-row-label">Plan</span><span class="detail-row-value">${PLANS[c.plan]?.label || c.plan}</span></div>
+          <div class="detail-row"><span class="detail-row-label">Onboarded</span><span class="detail-row-value">${formatDate(c.createdAt)}</span></div>
+          <div class="detail-row"><span class="detail-row-label">Status</span>
+            <button class="btn btn-ghost" style="width:auto; padding:6px 12px; font-size:11.5px;" onclick="toggleCompanyStatus('${c.id}','${c.status}')">
+              ${c.status === 'active' ? 'Suspend' : 'Reactivate'}
+            </button>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">Quota</div>
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <span style="font-size:12px; color:var(--text-muted);">Allocated</span>
+            <span class="mono" id="quotaDraftLabel" style="font-size:15px; font-weight:600;">${formatBytes(draftQuota)}</span>
+          </div>
+          <div class="quota-slider-row">
+            <input type="range" id="quotaSlider" min="1" max="${sliderMaxGb}" value="${Math.round(draftQuota / GB)}" oninput="onQuotaSlide(this.value)">
+          </div>
+          <div style="display:flex; gap:8px; align-items:center; margin-top:10px;">
+            <input type="number" id="quotaManualGb" class="mono" style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px 10px; color:var(--text); font-size:12.5px;" value="${Math.round(draftQuota / GB)}" min="1" oninput="onQuotaManual(this.value)">
+            <span style="font-size:12px; color:var(--text-muted);">GB</span>
+            <button class="btn btn-primary" style="width:auto; padding:8px 14px; font-size:12px;" onclick="saveQuota('${c.id}')">Save</button>
+          </div>
+          <div class="field-hint">Reducing quota below current usage won't delete files — new uploads will be blocked until usage drops or quota is raised.</div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">API access</div>
+          <div class="detail-row"><span class="detail-row-label">Key</span><span class="detail-row-value">${c.apiKeyPrefix || '—'}</span></div>
+          <div class="detail-row"><span class="detail-row-label">Generated</span><span class="detail-row-value">${formatDate(c.apiKeyCreatedAt)}</span></div>
+          <button class="btn btn-ghost" style="width:100%; margin-top:10px;" onclick="regenerateApiKey('${c.id}','${escapeHtml(c.name)}')">Regenerate API key</button>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">Danger zone</div>
+          <div class="danger-zone">
+            <p>Deleting a company removes its Silo workspace record permanently. This does not automatically delete files already in Storage — remove those first if required.</p>
+            <button class="btn btn-danger" style="width:100%;" onclick="confirmDeleteCompany('${c.id}','${escapeHtml(c.name)}')">Delete company</button>
+          </div>
+        </div>
+
+      </div>
+    </div>`;
+}
+
+function onQuotaSlide(gb) {
+  quotaDraftBytes = Number(gb) * GB;
+  document.getElementById('quotaManualGb').value = gb;
+  document.getElementById('quotaDraftLabel').textContent = formatBytes(quotaDraftBytes);
+}
+
+function onQuotaManual(gb) {
+  const v = Math.max(1, Number(gb) || 1);
+  quotaDraftBytes = v * GB;
+  document.getElementById('quotaSlider').value = Math.min(v, document.getElementById('quotaSlider').max);
+  document.getElementById('quotaDraftLabel').textContent = formatBytes(quotaDraftBytes);
+}
+
+async function saveQuota(companyId) {
+  if (!quotaDraftBytes || quotaDraftBytes <= 0) { toast('Enter a valid quota.', true); return; }
+  try {
+    await db.collection('companies').doc(companyId).update({ quotaBytes: quotaDraftBytes });
+    toast('Quota updated.');
+  } catch (err) {
+    console.error(err);
+    toast('Could not update quota.', true);
+  }
+}
+
+async function toggleCompanyStatus(companyId, currentStatus) {
+  const next = currentStatus === 'active' ? 'suspended' : 'active';
+  try {
+    await db.collection('companies').doc(companyId).update({ status: next });
+    toast(next === 'suspended' ? 'Company suspended.' : 'Company reactivated.');
+  } catch (err) {
+    console.error(err);
+    toast('Could not update status.', true);
+  }
+}
+
+async function regenerateApiKey(companyId, companyName) {
+  try {
+    const key = 'sk_live_' + randomKeySuffix(32);
+    const keyHash = await sha256Hex(key);
+    await db.collection('companies').doc(companyId).update({
+      apiKeyHash: keyHash,
+      apiKeyPrefix: key.slice(0, 16) + '…',
+      apiKeyCreatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showApiKeyModal(key, companyName);
+    toast('New API key generated. The previous key no longer works.');
+  } catch (err) {
+    console.error(err);
+    toast('Could not regenerate key.', true);
+  }
+}
+
+function confirmDeleteCompany(companyId, companyName) {
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <div class="modal-head">
+          <div class="modal-title">Delete ${escapeHtml(companyName)}?</div>
+          <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:13px; color:var(--text-muted); line-height:1.6;">This permanently removes the company's workspace record, quota, and API key from Silo. This can't be undone.</p>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-danger" style="width:auto; padding:10px 18px;" onclick="deleteCompany('${companyId}')">Delete permanently</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function deleteCompany(companyId) {
+  try {
+    await db.collection('companies').doc(companyId).delete();
+    closeModal();
+    closeSlideover();
+    toast('Company deleted.');
+  } catch (err) {
+    console.error(err);
+    toast('Could not delete company.', true);
+  }
+}
+</script>
+</body>
+</html>
