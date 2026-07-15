@@ -193,6 +193,37 @@
     line-height:1.5;
   }
 
+  .btn-google{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:11px 16px;
+    font-size:13.5px;
+    font-weight:500;
+    margin-bottom:20px;
+  }
+  .btn-google:hover{border-color:var(--text-dim); background:var(--surface-2);}
+  .btn-google svg{width:17px; height:17px; flex-shrink:0;}
+  .btn-google:disabled{opacity:0.5; cursor:not-allowed;}
+
+  .login-divider{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:20px;
+    color:var(--text-dim);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+  }
+  .login-divider::before, .login-divider::after{
+    content:'';
+    flex:1;
+    height:1px;
+    background:var(--border-soft);
+  }
+
   .login-foot{
     margin-top:24px;
     padding-top:20px;
@@ -675,6 +706,16 @@
     </div>
     <p class="login-sub">Admin console. Sign in with your operator credentials to manage companies, quotas, and storage.</p>
     <div id="loginError" class="login-error hidden"></div>
+    <button type="button" id="googleSignInBtn" class="btn btn-google" style="display:flex; align-items:center; justify-content:center; gap:10px;">
+      <svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 01-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.62z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.33A9 9 0 009 18z"/>
+        <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 013.68 9c0-.59.1-1.17.27-1.7V4.97H.96A9 9 0 000 9c0 1.45.35 2.83.96 4.03l2.99-2.33z"/>
+        <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 00.96 4.97L3.95 7.3C4.66 5.17 6.65 3.58 9 3.58z"/>
+      </svg>
+      Continue with Google
+    </button>
+    <div class="login-divider">or</div>
     <form id="loginForm">
       <div class="field">
         <label for="loginEmail">Email</label>
@@ -971,6 +1012,24 @@ function friendlyAuthError(err) {
 }
 
 document.getElementById('signOutBtn').addEventListener('click', () => auth.signOut());
+
+const googleSignInBtn = document.getElementById('googleSignInBtn');
+googleSignInBtn.addEventListener('click', async () => {
+  loginError.classList.add('hidden');
+  googleSignInBtn.disabled = true;
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider);
+    // onAuthStateChanged handles the rest
+  } catch (err) {
+    if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+      loginError.textContent = friendlyAuthError(err);
+      loginError.classList.remove('hidden');
+    }
+  } finally {
+    googleSignInBtn.disabled = false;
+  }
+});
 
 auth.onAuthStateChanged(async (user) => {
   if (!user) {
