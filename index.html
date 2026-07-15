@@ -929,6 +929,9 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// Cloud Functions HTTP API that companies integrate against (see functions/index.js).
+const SILO_API_BASE = "https://us-central1-newstart-64c43.cloudfunctions.net/siloApi";
+
 // ---------- Plans ----------
 const GB = 1024 ** 3;
 const TB = 1024 ** 4;
@@ -1509,6 +1512,8 @@ function renderSlideover() {
           <div class="detail-section-title">API access</div>
           <div class="detail-row"><span class="detail-row-label">Key</span><span class="detail-row-value">${c.apiKeyPrefix || '—'}</span></div>
           <div class="detail-row"><span class="detail-row-label">Generated</span><span class="detail-row-value">${formatDate(c.apiKeyCreatedAt)}</span></div>
+          <div class="detail-row"><span class="detail-row-label">Base URL</span><span class="detail-row-value mono" style="font-size:11px; word-break:break-all;">${SILO_API_BASE}</span></div>
+          <div class="field-hint" style="margin-top:8px;">Files this company uploads are namespaced automatically under its own workspace — they only ever reference paths within it (e.g. <code>avatars/user123.png</code>). Endpoints: <code>PUT/GET/DELETE /v1/files/&lt;path&gt;</code>, <code>GET /v1/files?prefix=</code>, <code>GET /v1/usage</code>. Auth via <code>Authorization: Bearer &lt;api_key&gt;</code>.</div>
           <button class="btn btn-ghost" style="width:100%; margin-top:10px;" onclick="regenerateApiKey('${c.id}','${escapeHtml(c.name)}')">Regenerate API key</button>
         </div>
 
