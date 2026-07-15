@@ -463,6 +463,28 @@
   .status-dot.suspended{background:var(--danger);}
   .status-dot.pending{background:var(--text-dim);}
 
+  /* ---------- Connection badge (is data actually coming in?) ---------- */
+  .conn-badge{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;
+  }
+  .conn-dot{width:7px; height:7px; border-radius:50%; display:inline-block; flex-shrink:0;}
+  .conn-badge.conn-live{color:var(--ok);}
+  .conn-badge.conn-live .conn-dot{background:var(--ok); animation:conn-pulse 1.8s ease-out infinite;}
+  .conn-badge.conn-idle{color:var(--accent);}
+  .conn-badge.conn-idle .conn-dot{background:var(--accent);}
+  .conn-badge.conn-offline{color:var(--danger);}
+  .conn-badge.conn-offline .conn-dot{background:var(--danger);}
+  .conn-badge.conn-never{color:var(--text-dim);}
+  .conn-badge.conn-never .conn-dot{background:var(--text-dim);}
+  .conn-lastseen{font-size:10.5px; color:var(--text-dim); margin-top:3px; font-family:var(--font-mono);}
+
+  @keyframes conn-pulse{
+    0%{box-shadow:0 0 0 0 rgba(111,163,122,0.55);}
+    70%{box-shadow:0 0 0 5px rgba(111,163,122,0);}
+    100%{box-shadow:0 0 0 0 rgba(111,163,122,0);}
+  }
+
   /* ---------- Companies table ---------- */
   .table-wrap{
     border:1px solid var(--border);
@@ -848,6 +870,7 @@
               <th>Company</th>
               <th>Plan</th>
               <th>Usage</th>
+              <th>Connection</th>
               <th>Status</th>
               <th>Onboarded</th>
             </tr>
@@ -878,6 +901,16 @@
 <script>
 /* ============================================================
    SILO ADMIN CONSOLE
+   ============================================================
+   NOTE on connection status:
+   This console only *reads* `lastSeenAt` off each company doc to render
+   Live/Idle/Offline badges. It has no ingestion endpoint of its own.
+   Whatever verifies a company's sk_live_ API key on incoming requests
+   (Cloud Function, etc.) must write:
+     db.collection('companies').doc(companyId).update({
+       lastSeenAt: firebase.firestore.FieldValue.serverTimestamp()
+     });
+   on every authenticated request for the badges to reflect reality.
    ============================================================ */
 
 // ---------- Firebase config ----------
@@ -933,6 +966,51 @@ function formatDate(ts) {
 function usagePct(company) {
   if (!company.quotaBytes) return 0;
   return Math.min(1, (company.usedBytes || 0) / company.quotaBytes);
+}
+
+// ---------- Connection status (is the client actually sending data?) ----------
+// Driven by `lastSeenAt` on the company doc, which your ingestion endpoint
+// should update on every authenticated request. Tune thresholds to match
+// how often a healthy integration is expected to check in.
+const CONN_LIVE_MS    = 2  * 60 * 1000;   // seen within 2 min   -> Live
+const CONN_IDLE_MS    = 30 * 60 * 1000;   // seen within 30 min  -> Idle
+// anything older (or a lastSeenAt that exists but is stale)   -> Offline
+// no lastSeenAt field at all                                  -> Never connected
+
+function tsToMs(ts) {
+  if (!ts) return null;
+  return ts.toDate ? ts.toDate().getTime() : new Date(ts).getTime();
+}
+
+function connectionStatus(company) {
+  const ms = tsToMs(company.lastSeenAt);
+  if (ms == null) return 'never';
+  const diff = Date.now() - ms;
+  if (diff <= CONN_LIVE_MS) return 'live';
+  if (diff <= CONN_IDLE_MS) return 'idle';
+  return 'offline';
+}
+
+const CONN_LABELS = { live: 'Live', idle: 'Idle', offline: 'Offline', never: 'Never connected' };
+
+function connectionBadge(company) {
+  const status = connectionStatus(company);
+  return `<span class="conn-badge conn-${status}"><span class="conn-dot"></span>${CONN_LABELS[status]}</span>`;
+}
+
+function timeAgo(ts) {
+  const ms = tsToMs(ts);
+  if (ms == null) return 'no data received yet';
+  const diff = Math.max(0, Date.now() - ms);
+  const sec = Math.floor(diff / 1000);
+  if (sec < 10) return 'just now';
+  if (sec < 60) return sec + 's ago';
+  const min = Math.floor(sec / 60);
+  if (min < 60) return min + 'm ago';
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return hr + 'h ago';
+  const day = Math.floor(hr / 24);
+  return day + 'd ago';
 }
 
 function initials(name) {
@@ -1107,6 +1185,13 @@ function renderAll() {
   if (openCompanyId) renderSlideover();
 }
 
+// Connection badges are time-based (Live -> Idle -> Offline), so they need to
+// age even when no new Firestore write happens. Re-render on a light interval
+// to keep them accurate without waiting on the next snapshot.
+setInterval(() => {
+  if (companiesCache.length && !document.hidden) renderAll();
+}, 30000);
+
 // ---------- Stats ----------
 function renderStats() {
   const total = companiesCache.length;
@@ -1142,6 +1227,7 @@ function renderOverviewGrid() {
           <div class="company-tile-name">${escapeHtml(c.name)}</div>
           <div class="company-tile-plan"><span class="status-dot ${c.status}"></span>${PLANS[c.plan]?.label || c.plan}</div>
           <div class="company-tile-usage"><b>${formatBytes(c.usedBytes)}</b> / ${formatBytes(c.quotaBytes)}</div>
+          <div style="margin-top:9px;">${connectionBadge(c)}</div>
         </div>
       </div>`;
   }).join('');
@@ -1188,6 +1274,10 @@ function renderCompanyTable() {
             <div class="usage-bar-track"><div class="usage-bar-fill ${barClass}" style="width:${(pct * 100).toFixed(1)}%"></div></div>
             <span class="mono" style="font-size:11.5px; color:var(--text-muted);">${(pct * 100).toFixed(0)}%</span>
           </div>
+        </td>
+        <td>
+          ${connectionBadge(c)}
+          <div class="conn-lastseen">${timeAgo(c.lastSeenAt)}</div>
         </td>
         <td><span class="status-pill ${c.status}">${c.status}</span></td>
         <td class="mono" style="color:var(--text-muted); font-size:12px;">${formatDate(c.createdAt)}</td>
@@ -1383,11 +1473,13 @@ function renderSlideover() {
             <div class="silo-hero-bytes">${formatBytes(c.usedBytes)} used of ${formatBytes(c.quotaBytes)}</div>
           </div>
           <span class="status-pill ${c.status}">${c.status}</span>
+          <div style="margin-top:10px;">${connectionBadge(c)}</div>
         </div>
 
         <div class="detail-section">
           <div class="detail-section-title">Details</div>
           <div class="detail-row"><span class="detail-row-label">Plan</span><span class="detail-row-value">${PLANS[c.plan]?.label || c.plan}</span></div>
+          <div class="detail-row"><span class="detail-row-label">Connection</span><span class="detail-row-value">${timeAgo(c.lastSeenAt)}</span></div>
           <div class="detail-row"><span class="detail-row-label">Onboarded</span><span class="detail-row-value">${formatDate(c.createdAt)}</span></div>
           <div class="detail-row"><span class="detail-row-label">Status</span>
             <button class="btn btn-ghost" style="width:auto; padding:6px 12px; font-size:11.5px;" onclick="toggleCompanyStatus('${c.id}','${c.status}')">
