@@ -212,7 +212,7 @@ app.delete('/v1/files/*', async (req, res) => {
   }
 });
 
-exports.siloApi = onRequest({ region: 'us-central1', cors: true }, app);
+exports.siloApi = onRequest({ region: 'us-east1', cors: true }, app);
 
 // ---------------------------------------------------------------------------
 // Storage triggers — the real source of truth for usedBytes. These fire
@@ -220,7 +220,7 @@ exports.siloApi = onRequest({ region: 'us-central1', cors: true }, app);
 // Firestore can never drift from what's actually in the bucket.
 // ---------------------------------------------------------------------------
 
-exports.onFileFinalized = onObjectFinalized({ region: 'us-central1' }, async (event) => {
+exports.onFileFinalized = onObjectFinalized({ region: 'us-east1' }, async (event) => {
   const obj = event.data;
   const companyId = companyIdFromObjectPath(obj.name);
   if (!companyId) return;
@@ -230,7 +230,7 @@ exports.onFileFinalized = onObjectFinalized({ region: 'us-central1' }, async (ev
   }).catch(err => logger.error('usedBytes increment failed', err));
 });
 
-exports.onFileDeletedTrigger = onObjectDeleted({ region: 'us-central1' }, async (event) => {
+exports.onFileDeletedTrigger = onObjectDeleted({ region: 'us-east1' }, async (event) => {
   const obj = event.data;
   const companyId = companyIdFromObjectPath(obj.name);
   if (!companyId) return;
