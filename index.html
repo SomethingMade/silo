@@ -937,15 +937,15 @@ const SILO_API_BASE = "https://us-east1-newstart-64c43.cloudfunctions.net/siloAp
 const GB = 1024 ** 3;
 const TB = 1024 ** 4;
 const PLANS = {
-  starter: { label: 'Starter',  quotaBytes: 100 * GB, pricePerGb: 0.09 },
-  growth:  { label: 'Growth',   quotaBytes: 1 * TB,   pricePerGb: 0.07 },
-  scale:   { label: 'Scale',    quotaBytes: 5 * TB,   pricePerGb: 0.05 },
-  custom:  { label: 'Custom',   quotaBytes: null,     pricePerGb: 0.06 }
+  starter: { label: 'Starter',  quotaBytes: 100 * GB, pricePerGb: 1.60 },
+  growth:  { label: 'Growth',   quotaBytes: 1 * TB,   pricePerGb: 1.25 },
+  scale:   { label: 'Scale',    quotaBytes: 5 * TB,   pricePerGb: 0.90 },
+  custom:  { label: 'Custom',   quotaBytes: null,     pricePerGb: 1.10 }
 };
 
 // ---------- Invoicing ----------
-const INVOICE_CURRENCY = 'USD';
-const INVOICE_CURRENCY_SYMBOL = '$';
+const INVOICE_CURRENCY = 'ZAR';
+const INVOICE_CURRENCY_SYMBOL = 'R';
 const BILLER = {
   name: 'Silo, a Vynix company',
   email: 'billing@silo.storage',
