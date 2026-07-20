@@ -1645,12 +1645,10 @@ async function deleteCompany(companyId) {
 }
 
 // ---------- Client portal invite ----------
-function portalBaseUrl() {
-  return location.href.replace(/[^/]*$/, ''); // directory this file lives in
-}
+const CLIENT_PORTAL_URL = "https://somethingmade.github.io/clients/";
 
 function showInviteLink(companyId, companyName) {
-  const link = `${portalBaseUrl()}client-portal.html?invite=${companyId}`;
+  const link = `${CLIENT_PORTAL_URL}?invite=${companyId}`;
   const root = document.getElementById('modalRoot');
   root.innerHTML = `
     <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
