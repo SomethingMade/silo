@@ -1527,6 +1527,19 @@ function renderSlideover() {
         </div>
 
         <div class="detail-section">
+          <div class="detail-section-title">Client portal</div>
+          ${c.portalLinked && c.authUid ? `
+            <div class="detail-row"><span class="detail-row-label">Status</span><span class="status-pill active">linked</span></div>
+            <div class="detail-row"><span class="detail-row-label">Account</span><span class="detail-row-value" style="font-family:var(--font-body); font-size:12.5px;">${escapeHtml(c.portalEmail || '—')}</span></div>
+            <button class="btn btn-danger" style="width:100%; margin-top:6px;" onclick="revokePortalAccess('${c.id}','${escapeHtml(c.name)}')">Revoke portal access</button>
+          ` : `
+            <div class="detail-row"><span class="detail-row-label">Status</span><span class="status-pill pending">not linked</span></div>
+            <div class="field-hint">Send this client a sign-up link so they can create their own portal account to view usage, download invoices, and manage their API key.</div>
+            <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="showInviteLink('${c.id}','${escapeHtml(c.name)}')">Get invite link</button>
+          `}
+        </div>
+
+        <div class="detail-section">
           <div class="detail-section-title">API access</div>
           <div class="detail-row"><span class="detail-row-label">Key</span><span class="detail-row-value">${c.apiKeyPrefix || '—'}</span></div>
           <div class="detail-row"><span class="detail-row-label">Generated</span><span class="detail-row-value">${formatDate(c.apiKeyCreatedAt)}</span></div>
@@ -1631,7 +1644,54 @@ async function deleteCompany(companyId) {
   }
 }
 
-// ---------- Invoice ----------
+// ---------- Client portal invite ----------
+function portalBaseUrl() {
+  return location.href.replace(/[^/]*$/, ''); // directory this file lives in
+}
+
+function showInviteLink(companyId, companyName) {
+  const link = `${portalBaseUrl()}client-portal.html?invite=${companyId}`;
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <div class="modal-head">
+          <div class="modal-title">Invite link — ${escapeHtml(companyName)}</div>
+          <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:12.5px; color:var(--text-muted); line-height:1.6; margin-bottom:12px;">Send this link to your contact at ${escapeHtml(companyName)}. The first person who signs in through it links their account to this workspace — it can't be reused after that.</p>
+          <div class="apikey-box" id="inviteLinkBox">${escapeHtml(link)}</div>
+          <button class="copy-btn" onclick="copyInviteLink('${link}')">Copy link</button>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-primary" style="width:auto; padding:10px 20px;" onclick="closeModal()">Done</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function copyInviteLink(link) {
+  navigator.clipboard.writeText(link)
+    .then(() => toast('Invite link copied.'))
+    .catch(() => toast('Could not copy — select and copy manually.', true));
+}
+
+async function revokePortalAccess(companyId, companyName) {
+  try {
+    await db.collection('companies').doc(companyId).update({
+      authUid: null,
+      portalLinked: false,
+      portalEmail: null
+    });
+    toast(`Portal access revoked for ${companyName}.`);
+  } catch (err) {
+    console.error(err);
+    toast('Could not revoke portal access.', true);
+  }
+}
+
+
 function isoDate(d) {
   return d.toISOString().slice(0, 10);
 }
